@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nyaya-Setu | Add Evidence</title>
+  <title>Nyaya-Setu | Secure Upload</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
   <style>
-    :root {
+        :root {
       --primary-color: #1e3a8a; /* Deep Navy */
       --secondary-color: #64748b; /* Slate */
       --accent-color: #2563eb; /* Law Blue */
@@ -75,7 +76,7 @@
     input:focus {
       outline: none;
       border-color: var(--accent-color);
-      ring: 2px solid rgba(37, 99, 235, 0.1);
+      border: 2px solid rgba(37, 99, 235, 0.1);
     }
 
     /* Custom File Upload Styling */
@@ -119,37 +120,217 @@
     .footer-links a:hover {
       text-decoration: underline;
     }
+
+    .wallet-btn {
+      background: #ea580c; margin-bottom: 1rem;
+    }
+
+    .wallet-btn.connected {
+      background: #16a34a; cursor: default;
+    }
+    
+    #loader {
+      display: none;
+      color: #ea580c;
+      text-align: center;
+      font-weight: bold;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
 
   <div class="container">
     <h1>Nyaya-Setu</h1>
-    <p class="subtitle">Evidence Management System</p>
+    <p class="subtitle">Immutable Evidence Locker</p>
     
-    <form action="/evidence" method="POST" enctype="multipart/form-data">
+    <button type="button" id="connectBtn" class="wallet-btn" onclick="connectWallet()">
+      🦊 Connect MetaMask
+    </button>
+
+    <form id="uploadForm">
       <div class="form-group">
-        <label for="caseId">Case Reference Number</label>
-        <input type="text" id="caseId" name="caseId" placeholder="e.g. CAS-2024-001" required>
+        <label>Case Reference Number</label>
+        <input type="text" id="caseId" name="caseId" placeholder="e.g. CAS-2026-001" required>
       </div>
 
       <div class="form-group">
-        <label for="officerId">Investigating Officer ID</label>
-        <input type="text" id="officerId" name="officerId" placeholder="Badge or ID Number" required>
+        <label>Investigating Officer ID</label>
+        <input type="text" id="officerId" name="officerId" placeholder="Badge ID" required>
       </div>
 
       <div class="form-group">
-        <label for="file">Digital Evidence File</label>
+        <label>Digital Evidence File</label>
         <input type="file" id="file" name="file" required>
       </div>
 
-      <button type="submit">Securely Upload Evidence</button>
+      <button type="submit" id="submitBtn" disabled>Step 1: Upload & Sign</button>
+      <div id="loader">⏳ Uploading to IPFS & Waiting for MetaMask...</div>
     </form>
 
     <div class="footer-links">
-      <a href="/evidence">← View All Logged Evidence</a>
+      <a href="/evidence">← View Repository</a>
     </div>
   </div>
 
+  <script>
+    let signer;
+    let contract;
+    
+    // --- COPY PASTE YOUR CONTRACT DETAILS HERE ---
+    const CONTRACT_ADDRESS = "0x7C9069A677807e4D168e3a7c40bFbe790288Ad18"; 
+    const ABI = [
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": true,
+					"internalType": "string",
+					"name": "caseId",
+					"type": "string"
+				},
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "fileHash",
+					"type": "string"
+				},
+				{
+					"indexed": true,
+					"internalType": "address",
+					"name": "officer",
+					"type": "address"
+				}
+			],
+			"name": "EvidenceStored",
+			"type": "event"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "string",
+					"name": "_caseId",
+					"type": "string"
+				},
+				{
+					"internalType": "string",
+					"name": "_fileHash",
+					"type": "string"
+				}
+			],
+			"name": "storeEvidence",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "string",
+					"name": "_caseId",
+					"type": "string"
+				}
+			],
+			"name": "verifyEvidence",
+			"outputs": [
+				{
+					"internalType": "string",
+					"name": "",
+					"type": "string"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		}
+	];
+
+    // 1. Connect Wallet Function
+    // 1. Connect Wallet Function (Smart Version)
+    async function connectWallet() {
+      if (!window.ethereum) return alert("Please install MetaMask!");
+      
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      
+      // A. Force Network Switch to Sepolia
+      const sepChainId = "0xaa36a7"; // Chain ID for Sepolia (11155111)
+      
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: sepChainId }],
+        });
+      } catch (switchError) {
+        // This error code means Sepolia hasn't been added to their wallet yet
+        if (switchError.code === 4902) {
+           alert("Please add Sepolia Network to MetaMask!");
+           return;
+        }
+        console.error("Network Switch Error", switchError);
+      }
+
+      // B. Connect Account
+      await provider.send("eth_requestAccounts", []);
+      signer = provider.getSigner();
+      
+      const address = await signer.getAddress();
+      document.getElementById("connectBtn").innerText = "✅ Connected: " + address.slice(0,6) + "...";
+      document.getElementById("connectBtn").classList.add("connected");
+      document.getElementById("submitBtn").disabled = false;
+      
+      // Init Contract
+      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+    }
+
+    // 2. The Main Upload Logic
+    document.getElementById("uploadForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById("submitBtn");
+      const loader = document.getElementById("loader");
+      submitBtn.style.display = 'none';
+      loader.style.display = 'block';
+
+      try {
+        // A. Send File to Server (Pinata)
+        const formData = new FormData(e.target);
+        
+        // Note: We changed the server route to return JSON, not redirect
+        const response = await fetch('/evidence/upload-api', { 
+            method: 'POST', 
+            body: formData 
+        });
+        
+        const data = await response.json();
+        if(!data.success) throw new Error("Server Upload Failed");
+
+        const { dbId, fileHash, caseId } = data;
+        
+        // B. Blockchain Magic (MetaMask Popup)
+        loader.innerText = "🦊 Please Confirm in MetaMask...";
+        
+        // Call the Smart Contract
+        const tx = await contract.storeEvidence(caseId, fileHash);
+        
+        loader.innerText = "⏳ Mining Transaction... Please Wait.";
+        await tx.wait(); // Wait for block confirmation
+        
+        // C. Save the Tx Hash back to Server
+        await fetch('/evidence/confirm-tx', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ dbId, txHash: tx.hash })
+        });
+
+        alert("🎉 Evidence Secured on Blockchain!\nTx: " + tx.hash);
+        window.location.href = "/evidence"; // Redirect to dashboard
+
+      } catch (err) {
+        console.error(err);
+        alert("Error: " + err.message);
+        submitBtn.style.display = 'block';
+        loader.style.display = 'none';
+      }
+    });
+  </script>
 </body>
 </html>

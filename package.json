@@ -13,6 +13,12 @@
   "description": "",
   "dependencies": {
     "@pinata/sdk": "^1.1.23",
-    "dotenv": "^17.2.4"
+    "body-parser": "^2.2.2",
+    "dotenv": "^17.2.4",
+    "ejs": "^4.0.1",
+    "express": "^5.2.1",
+    "mongodb": "^7.1.0",
+    "mongoose": "^9.2.0",
+    "multer": "^2.0.2"
   }
 }

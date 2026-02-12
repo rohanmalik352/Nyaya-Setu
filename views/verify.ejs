@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nyaya-Setu | Verify Integrity</title>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+
   <style>
     :root {
       --primary: #1e3a8a;
@@ -11,6 +14,7 @@
       --success: #059669;
       --danger: #dc2626;
       --slate: #64748b;
+      --warning: #d97706;
     }
     body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 40px; }
     .verify-card {
@@ -32,17 +36,31 @@
       text-align: center;
       font-weight: bold;
       animation: fadeIn 0.3s ease-in;
+      border-left: 5px solid transparent;
     }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     
-    .status-valid { background: #d1fae5; color: var(--success); border: 1px solid var(--success); }
-    .status-invalid { background: #fee2e2; color: var(--danger); border: 1px solid var(--danger); }
+    .status-valid { background: #d1fae5; color: #064e3b; border-left-color: var(--success); }
+    .status-invalid { background: #fee2e2; color: #7f1d1d; border-left-color: var(--danger); }
+    .status-loading { background: #e0f2fe; color: #0369a1; border-left-color: var(--primary); }
     
     input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #ddd; box-sizing: border-box; }
     input[readonly] { background-color: #f1f5f9; cursor: not-allowed; color: #475569; }
     button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: 600; margin-top: 1.5rem; }
     button:hover { opacity: 0.9; }
     .back-link { display: block; text-align: center; margin-top: 1rem; color: var(--slate); text-decoration: none; font-size: 0.9rem; }
+    
+    /* Blockchain Badge */
+    .chain-badge {
+        font-size: 0.8rem; 
+        padding: 4px 8px; 
+        border-radius: 4px; 
+        margin-left: 8px;
+        display: inline-block;
+    }
+    .chain-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .chain-fail { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
   </style>
 </head>
 <body>
@@ -59,6 +77,7 @@
       <label>Case ID Reference</label>
       <input 
         type="text" 
+        id="caseIdInput"
         name="caseId" 
         placeholder="Enter Case ID" 
         value="<%= (typeof preFetched !== 'undefined' && preFetched) ? preFetched.caseId : '' %>"
@@ -72,17 +91,89 @@
     </form>
 
     <% if (result) { %>
-      <div class="status-box <%= result.valid ? 'status-valid' : 'status-invalid' %>">
-        <%= result.valid ? '✓ VERIFIED: Evidence is Untampered' : '⚠ WARNING: Hash Mismatch Detected' %>
-        <div style="font-size: 0.7rem; font-family: monospace; margin-top: 8px; word-break: break-all;">
-            <strong>Computed Hash:</strong><br>
-            <%= result.currentHash %>
+        <div class="status-box <%= result.valid ? 'status-valid' : 'status-invalid' %>">
+            <%= result.valid ? '✓ MongoDB Record Matches File' : '⚠ MongoDB Mismatch' %>
+            
+            <div style="font-size: 0.75rem; margin-top: 10px; color: #475569; text-align: left;">
+                <div>📂 <strong>File Hash:</strong> <%= result.currentHash.substring(0,20) %>...</div>
+                <% if(result.originalHash) { %>
+                    <div>kB <strong>DB Hash:</strong> <%= result.originalHash.substring(0,20) %>...</div>
+                <% } %>
+            </div>
         </div>
-      </div>
+
+        <div id="blockchainStatus" class="status-box status-loading" style="display:none;">
+            ⏳ Connecting to Blockchain...
+        </div>
     <% } %>
 
     <a href="/evidence" class="back-link">← Return to Repository</a>
   </div>
+
+  <script>
+    // --- CONFIGURATION ---
+    const CONTRACT_ADDRESS = "0x7C9069A677807e4D168e3a7c40bFbe790288Ad18"; // Your Sepolia Address
+    const ABI = [
+        {"inputs": [{"internalType": "string","name": "_caseId","type": "string"}],"name": "verifyEvidence","outputs": [{"internalType": "string","name": "","type": "string"}],"stateMutability": "view","type": "function"}
+    ];
+
+    // Check if we have a result from the server to verify against the chain
+    <% if (result) { %>
+        const fileHash = "<%= result.currentHash %>";
+        const caseId = "<%= (typeof preFetched !== 'undefined' && preFetched) ? preFetched.caseId : '' %>" || document.getElementById('caseIdInput').value;
+        
+        verifyOnChain(caseId, fileHash);
+    <% } %>
+
+    async function verifyOnChain(caseId, currentFileHash) {
+        const statusBox = document.getElementById('blockchainStatus');
+        statusBox.style.display = 'block';
+
+        if (!window.ethereum) {
+            statusBox.innerHTML = "⚠ MetaMask not found. Cannot verify Blockchain Record.";
+            statusBox.className = "status-box status-invalid";
+            return;
+        }
+
+        try {
+            // Connect Read-Only Provider
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+
+            // Fetch Hash from Smart Contract
+            statusBox.innerHTML = "🔗 Fetching from Sepolia Testnet...";
+            const onChainHash = await contract.verifyEvidence(caseId);
+
+            if (!onChainHash || onChainHash === "") {
+                statusBox.innerHTML = "❌ No Blockchain Record Found for this Case ID.";
+                statusBox.className = "status-box status-invalid";
+                return;
+            }
+
+            // Compare
+            if (onChainHash === currentFileHash) {
+                statusBox.innerHTML = "🔒 <strong>BLOCKCHAIN VERIFIED</strong><br>The file matches the Immutable Ledger.";
+                statusBox.className = "status-box status-valid";
+                statusBox.style.border = "2px solid #059669";
+            } else {
+                statusBox.innerHTML = "🚨 <strong>CRITICAL TAMPER WARNING</strong><br>Blockchain Hash does not match File!";
+                statusBox.className = "status-box status-invalid";
+                
+                // Show details
+                const details = document.createElement('div');
+                details.style.fontSize = "0.7rem";
+                details.style.marginTop = "8px";
+                details.innerHTML = `Chain: ${onChainHash.substring(0,15)}... <br> File: ${currentFileHash.substring(0,15)}...`;
+                statusBox.appendChild(details);
+            }
+
+        } catch (err) {
+            console.error(err);
+            statusBox.innerHTML = "⚠ Blockchain Connection Failed.";
+            statusBox.className = "status-box status-invalid";
+        }
+    }
+  </script>
 
 </body>
 </html>

@@ -24,6 +24,14 @@ const pinata = new pinataSDK(
   process.env.PINATA_API_KEY,
   process.env.PINATA_API_SECRET
 );
+// Test Pinata Connection
+pinata.testAuthentication().then((result) => {
+    console.log("✅ Pinata connected successfully!");
+    console.log(result);
+}).catch((err) => {
+    console.log("❌ Pinata Error: Check your .env keys!");
+    console.log(err);
+});
 
 // ----- Express Setup -----
 app.set('view engine', 'ejs');
@@ -34,8 +42,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ----- Database Connection Logic -----
 const connectDB = async () => {
   try {
-    await mongoose.connect("mongodb://127.0.0.1:27017/nyaya-setu");
-    console.log("✅ Connected to MongoDB: nyaya-setu");
+    const dbURI = process.env.MONGO_URI; 
+    if (!dbURI) {
+      console.error("❌ Error: MONGO_URI is missing in .env file!");
+      process.exit(1);
+    } else if (dbURI){
+      await mongoose.connect(dbURI);
+      console.log("✅ Connected to MongoDB: nyaya-setu");
+    }
   } catch (err) {
     console.error("❌ MongoDB connection error:", err);
     process.exit(1);
@@ -45,7 +59,7 @@ const connectDB = async () => {
 // ----- Routes -----
 
 app.get('/', (req, res) => {
-  res.render('index');
+  res.render('index.ejs');
 });
 
 // 1. Repository: Fetching by DB ID automatically happens in the background
@@ -59,38 +73,68 @@ app.get('/evidence', async (req, res) => {
 });
 
 // 2. Log Evidence
-app.post('/evidence', upload.single('file'), async (req, res) => {
+// --- MODIFIED ROUTE 1: Upload to Pinata but DON'T redirect yet ---
+// Returns JSON so the Frontend can start the MetaMask process
+app.post('/evidence/upload-api', upload.single('file'), async (req, res) => {
   try {
     const { caseId, officerId } = req.body;
-    if (!req.file) return res.status(400).send('File not uploaded');
+    if (!req.file) return res.status(400).json({ success: false, error: 'No file' });
 
+    // 1. Hash locally
     const fileBuffer = fs.readFileSync(req.file.path);
     const fileHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
 
+    // 2. Upload to Pinata
     const readableStreamForFile = fs.createReadStream(req.file.path);
     const options = {
       pinataMetadata: { name: req.file.originalname, keyvalues: { caseId, officerId } },
       pinataOptions: { cidVersion: 1 }
     };
-
     const result = await pinata.pinFileToIPFS(readableStreamForFile, options);
-    
-    // SAVE TO DB: MongoDB generates a unique _id automatically
-    await Evidence.create({
+
+    // 3. Create "Pending" Record in DB
+    // We leave blockchainTxHash empty for now (or put 'PENDING')
+    const newEvidence = await Evidence.create({
       caseId,
       officerId,
       fileName: req.file.originalname,
       fileHash,
       ipfsCID: result.IpfsHash,
-      blockchainTxHash: '0x' + crypto.randomBytes(20).toString('hex'),
+      blockchainTxHash: 'PENDING_SIGNATURE', // Wait for MetaMask
     });
 
+    // 4. Cleanup & Respond
     fs.unlinkSync(req.file.path);
-    res.redirect('/evidence');
+    
+    // Send critical data back to Frontend
+    res.json({ 
+        success: true, 
+        dbId: newEvidence._id, 
+        fileHash: fileHash, 
+        caseId: caseId 
+    });
+
   } catch (err) {
     console.error(err);
-    res.status(500).send('Upload Error');
+    res.status(500).json({ success: false, error: 'Upload Failed' });
   }
+});
+
+// --- NEW ROUTE 2: Confirm Blockchain Transaction ---
+// The frontend calls this AFTER the user signs with MetaMask
+app.use(express.json()); // Ensure you can parse JSON bodies
+
+app.post('/evidence/confirm-tx', async (req, res) => {
+    try {
+        const { dbId, txHash } = req.body;
+        
+        // Update the record with the REAL Transaction Hash
+        await Evidence.findByIdAndUpdate(dbId, { blockchainTxHash: txHash });
+        
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
 });
 
 // 3. Verify Page (GET) - Accept an optional ID from the query string
