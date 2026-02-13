@@ -236,6 +236,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## AUTHORS
 
 - **Rohan Malik** - [@rohanmalik352](https://github.com/rohanmalik352)
+- **Manvi** - [@Manvi100203](https://github.com/Manvi100203)
+- **Harsh Panchal** - [@Harsh-Panchal-1](https://github.com/Harsh-Panchal-1)
+-  **Naman Chaudhary** - [@Naman1313](https://github.com/Naman1313)
 
 ## ACKNOWLEDGMENTS
 
@@ -243,13 +246,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Blockchain community for technical guidance
 - IPFS for decentralized storage infrastructure
 - All contributors who have helped shape this project
-
-## CONTACT & SUPPORT
-
-For questions, suggestions, or issues:
-- Open an issue on GitHub
-- Email: [Your contact email]
-- Documentation: [Link to detailed docs if available]
 
 ## ROADMAP
 
@@ -267,6 +263,6 @@ This system is designed to enhance evidence management in judicial proceedings. 
 
 ---
 
-**Built with care for the Indian Judiciary**
+**Built with care for the Ministry of Law and Justice and the Ministry of Home Affairs(MHA)**
 
 *Restoring Trust in Digital Evidence*
