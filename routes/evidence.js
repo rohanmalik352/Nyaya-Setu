@@ -1,113 +1,135 @@
-import express from "express";
-import axios from "axios";
-import crypto from "crypto";
-import multer from "multer";
-import Evidence from "../models/evidence.js";
+import 'dotenv/config';
+import express from 'express';
+import multer from 'multer';
+import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import pinataSDK from '@pinata/sdk';
+import Evidence from '../models/evidence.js';
+import { Readable } from 'stream';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const router = express.Router();
 
-// Multer for temporary file upload
-const upload = multer({ storage: multer.memoryStorage() });
+// Setup file upload storage (Temporary)
+const upload = multer({ dest: path.join(__dirname, '../uploads') });
 
-/* --------------------------------------------------------
-   Helper: Compute SHA-256 Hash
--------------------------------------------------------- */
-function computeHash(buffer) {
-  return crypto.createHash("sha256").update(buffer).digest("hex");
-}
+// Connect to IPFS (Pinata)
+const pinata = new pinataSDK(
+  process.env.PINATA_API_KEY,
+  process.env.PINATA_API_SECRET
+);
 
-/* --------------------------------------------------------
-   ROUTE 1: VERIFY EVIDENCE (Check if tampered)
--------------------------------------------------------- */
-router.post("/verify", upload.single("evidenceFile"), async (req, res) => {
+// --- Evidence Routes ---
+
+// 1. Show the Repository
+router.get('/evidence', async (req, res) => {
   try {
-    const { caseId } = req.body;
-
-    if (!req.file) {
-      return res.render("verify", {
-        error: "No file uploaded.",
-      });
-    }
-
-    const uploadedFileBuffer = req.file.buffer;
-    const uploadedFileHash = computeHash(uploadedFileBuffer);
-
-    const evidence = await Evidence.findOne({ caseId });
-
-    if (!evidence) {
-      return res.render("verify", {
-        error: "Case not found.",
-      });
-    }
-
-    // Compare with blockchain hash stored earlier
-    const originalHash = evidence.blockchainHash;
-
-    if (uploadedFileHash !== originalHash) {
-      return res.render("verify", {
-        tampered: true,
-        caseId: evidence.caseId,
-        expectedHash: originalHash,
-        gotHash: uploadedFileHash,
-      });
-    }
-
-    // If matched
-    return res.render("verify", {
-      tampered: false,
-      message: "Evidence is Authentic",
-    });
-
+    const allEvidence = await Evidence.find({});
+    res.render('show', { evidences: allEvidence });
   } catch (error) {
-    console.error(error);
-    res.render("verify", {
-      error: "Error verifying evidence",
-    });
+    console.error("Error:", error);
+    res.status(500).send("Could not load evidence.");
   }
 });
 
-/* --------------------------------------------------------
-   ROUTE 2: FETCH ORIGINAL GOLDEN COPY FROM IPFS
--------------------------------------------------------- */
-router.get("/fetch-original/:caseId", async (req, res) => {
+// 2. Upload Evidence
+router.post('/evidence/upload-api', upload.single('file'), async (req, res) => {
   try {
-    const { caseId } = req.params;
+    const { caseId, officerId } = req.body;
 
-    const evidence = await Evidence.findOne({ caseId });
-
-    if (!evidence) {
-      return res.status(404).json({ error: "Case not found" });
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'No file found' });
     }
 
-    const cid = evidence.ipfsCID;
-    const blockchainHash = evidence.blockchainHash;
+    // Calculate a unique digital fingerprint (Hash)
+    const fileBuffer = fs.readFileSync(req.file.path);
+    const fileHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
 
-    const gatewayURL = `https://gateway.pinata.cloud/ipfs/${cid}`;
+    // Send the file to IPFS (The Decentralized Cloud)
+    const readableStream = fs.createReadStream(req.file.path);
+    const options = {
+      pinataMetadata: {
+        name: req.file.originalname,
+        keyvalues: { caseId, officerId }
+      },
+      pinataOptions: { cidVersion: 1 }
+    };
+    const pinataResult = await pinata.pinFileToIPFS(readableStream, options);
 
-    // Fetch original file from IPFS
-    const response = await axios.get(gatewayURL, {
-      responseType: "arraybuffer",
+    // Save record to our database
+    // Note: We mark blockchain status as "Pending" until the user confirms via MetaMask
+    const newEvidence = await Evidence.create({
+      caseId: caseId,
+      officerId: officerId,
+      fileName: req.file.originalname,
+      fileHash: fileHash,
+      ipfsCID: pinataResult.IpfsHash,
+      blockchainTxHash: 'PENDING_SIGNATURE',
+      originalFileType: req.file.mimetype,
     });
 
-    const originalBuffer = Buffer.from(response.data);
-    const goldenCopyHash = computeHash(originalBuffer);
+    // Cleanup local file
+    fs.unlinkSync(req.file.path);
 
-    const isAuthentic = goldenCopyHash === blockchainHash;
-
-    return res.json({
-      message: "Golden Copy Retrieved",
-      authentic: isAuthentic,
-      blockchainHash,
-      goldenCopyHash,
-      cid,
-      fileBase64: originalBuffer.toString("base64"),
+    // Tell the frontend we are ready for the blockchain step
+    res.json({
+      success: true,
+      dbId: newEvidence._id,
+      fileHash: fileHash,
+      caseId: caseId
     });
 
   } catch (error) {
-    console.error("Error fetching Golden Copy:", error);
-    res.status(500).json({
-      error: "Error retrieving original file from IPFS",
-    });
+    console.error("Upload failed:", error);
+    res.status(500).json({ success: false, error: 'Upload Failed' });
+  }
+});
+
+// 3. Confirm Blockchain Transaction
+router.post('/evidence/confirm-tx', async (req, res) => {
+  try {
+    const { dbId, txHash } = req.body;
+
+    // Update the record with the confirmed transaction hash
+    await Evidence.findByIdAndUpdate(dbId, { blockchainTxHash: txHash });
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// 4. Download Golden Copy
+router.get('/evidence/retrieve/:id', async (req, res) => {
+  try {
+    const evidence = await Evidence.findById(req.params.id);
+    if (!evidence) return res.status(404).send("Not found.");
+
+    const { ipfsCID, fileName } = evidence;
+    const gatewayUrl = `https://gateway.pinata.cloud/ipfs/${ipfsCID}`;
+
+    // Fetch the file from IPFS Gateway
+    const response = await fetch(gatewayUrl);
+
+    if (!response.ok) {
+      return res.status(500).send("Could not download file from IPFS.");
+    }
+
+    // Prepare download for the user
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+    res.setHeader("Content-Type", response.headers.get("content-type") || "application/octet-stream");
+
+    // Stream the file data to the user
+    Readable.fromWeb(response.body).pipe(res);
+
+  } catch (error) {
+    console.error("Retrieval Error:", error);
+    return res.status(500).send("Error retrieving file.");
   }
 });
 
