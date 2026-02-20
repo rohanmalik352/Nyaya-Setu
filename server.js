@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import mongoose from 'mongoose';
 
-// Import Modular Routes
+// Import Routes
 import homeRoutes from './routes/home.js';
 import evidenceRoutes from './routes/evidence.js';
 import verifyRoutes from './routes/verify.js';
@@ -16,48 +16,40 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
-// ----- Express Configuration -----
+// ----- Express Config -----
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json()); // Parse JSON bodies
 
-// ----- Database Connection -----
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// ----- MongoDB Connection -----
 const connectDB = async () => {
   try {
-    const dbURI = process.env.MONGO_URI;
-    if (!dbURI) {
-      console.error("❌ Error: MONGO_URI is missing in .env file!");
-      // Don't exit process in Vercel environment, just log error
-      if (process.env.NODE_ENV !== 'production') process.exit(1);
-    } else {
-      // Check if already connected (for serverless hot-reload)
-      if (mongoose.connection.readyState === 0) {
-        await mongoose.connect(dbURI);
-        console.log("✅ Connected to MongoDB: nyaya-setu");
-      }
-    }
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("✅ MongoDB Connected");
   } catch (err) {
-    console.error("❌ MongoDB connection error:", err);
+    console.error("❌ MongoDB Error:", err);
+    process.exit(1); // stop app if DB fails
   }
 };
 
-// Initialize DB connection immediately
 connectDB();
 
-// ----- Route Registration -----
-// Connect the route files to our app
+// ----- Routes -----
 app.use('/', homeRoutes);
 app.use('/', evidenceRoutes);
 app.use('/', verifyRoutes);
 
-// ----- Start Server -----
-// Only listen if not running in Vercel (Vercel exports the app)
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
-}
+// ----- Health Check (important for Render) -----
+app.get('/', (req, res) => {
+  res.send("🚀 Nyaya-Setu Server is Running");
+});
 
-// Export for Vercel Serverless
-export default app;
+// ----- Start Server -----
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
