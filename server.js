@@ -34,18 +34,13 @@ const connectDB = async () => {
   }
 };
 
+console.log("MONGO_URI:", process.env.MONGO_URI);
 connectDB();
 
 // ----- Routes -----
 app.use('/', homeRoutes);
 app.use('/', evidenceRoutes);
 app.use('/', verifyRoutes);
-
-
-app.get('/', (req, res) => {
-  res.send("🚀 Nyaya-Setu Server is Running");
-});
-
 
 const PORT = process.env.PORT || 3000;
 

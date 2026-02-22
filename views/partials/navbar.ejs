@@ -1,0 +1,42 @@
+<header class="ns-hdr ns-navbar">
+  <a href="/" class="ns-logo">
+    <svg width="44" height="44" viewBox="0 0 64 64" fill="none">
+      <path d="M32 8L8 20V24H56V20L32 8Z" fill="#22d3ee" />
+      <rect x="14" y="28" width="6" height="20" rx="1" fill="#22d3ee" opacity="0.9" />
+      <rect x="25" y="28" width="6" height="20" rx="1" fill="#22d3ee" opacity="0.9" />
+      <rect x="36" y="28" width="6" height="20" rx="1" fill="#22d3ee" opacity="0.9" />
+      <rect x="47" y="28" width="6" height="20" rx="1" fill="#22d3ee" opacity="0.9" />
+      <rect x="6" y="50" width="52" height="4" rx="1" fill="#22d3ee" opacity="0.8" />
+      <rect x="10" y="56" width="44" height="4" rx="1" fill="#22d3ee" opacity="0.6" />
+    </svg>
+    <div class="ns-logo-t">
+      <span class="ns-logo-n">NyayaSetu</span>
+      <span class="ns-logo-s">Immutable Evidence Locker</span>
+    </div>
+  </a>
+
+  <nav class="ns-nav">
+    <a href="/" class="ns-nav-link">Home</a>
+    <a href="/verify" class="ns-nav-link ns-nav-link--gr">Verify</a>
+    <a href="/evidence" class="ns-nav-link">Repository</a>
+    <a href="/about" class="ns-nav-link">About</a>
+  </nav>
+
+  <button class="ns-nav-toggle" id="navToggle" aria-label="Toggle menu">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<div class="ns-nav-mob ns-hidden" id="mobileMenu">
+  <a href="/" class="ns-nav-mob-link">Home</a>
+  <a href="/verify" class="ns-nav-mob-link ns-nav-mob-link--gr">Verify</a>
+  <a href="/evidence" class="ns-nav-mob-link">Repository</a>
+  <a href="/about" class="ns-nav-mob-link">About</a>
+</div>
+
+<script>
+  document.getElementById('navToggle').addEventListener('click', function () {
+    const menu = document.getElementById('mobileMenu');
+    menu.classList.toggle('ns-hidden');
+  });
+</script>
