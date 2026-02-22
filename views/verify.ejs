@@ -13,7 +13,7 @@
 
 <%- include('partials/navbar') %>
 <body>
-  <!-- Ambient & Stars -->
+
   <div class="ns-amb"
     style="background: radial-gradient(circle at 50% 50%, rgba(50, 210, 130, .08) 0%, transparent 60%);"></div>
   <div class="ns-stars" id="starsContainer"></div>
@@ -60,7 +60,6 @@
           <button type="submit" class="ns-sub ns-sub--g">Execute Verification</button>
         </form>
 
-        <!-- RESULT SECTION -->
         <% if (result) { %>
           <div class="ns-stb <%= result.valid ? 'success' : 'error' %>" style="margin-top: 2rem;">
             <%= result.valid ? '✓ INTEGRITY CONFIRMED: File Matches Database Record' : '⚠ WARNING: TAMPER DETECTED' %>
@@ -74,7 +73,7 @@
               </div>
           </div>
 
-          <!-- BLOCKCHAIN STATUS -->
+        
           <div id="blockchainStatus" class="ns-stb loading" style="display:none; margin-top: 1rem;"></div>
 
           <% if (!result.valid && preFetched) { %>

@@ -9,14 +9,34 @@
   <link rel="stylesheet" href="/css/style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
   <script src="/js/app.js" defer></script>
+   <script src="/js/wallet.js" defer></script>
 </head>
 
 <body>
-  <!-- Stars Background -->
+  
   <div class="ns-stars" id="starsContainer"></div>
   <div class="ns-amb"></div>
 
-  <%- include('partials/navbar') %>
+  
+  <div id="landingPage" class="ns-page">
+    <header class="ns-hdr">
+      <div class="ns-logo">
+        <svg width="50" height="50" viewBox="0 0 64 64" fill="none">
+          <path d="M32 8L8 20V24H56V20L32 8Z" fill="#22d3ee" />
+          <rect x="14" y="28" width="6" height="20" rx="1" fill="#22d3ee" opacity="0.9" />
+          <rect x="25" y="28" width="6" height="20" rx="1" fill="#22d3ee" opacity="0.9" />
+          <rect x="36" y="28" width="6" height="20" rx="1" fill="#22d3ee" opacity="0.9" />
+          <rect x="47" y="28" width="6" height="20" rx="1" fill="#22d3ee" opacity="0.9" />
+          <rect x="6" y="50" width="52" height="4" rx="1" fill="#22d3ee" opacity="0.8" />
+          <rect x="10" y="56" width="44" height="4" rx="1" fill="#22d3ee" opacity="0.6" />
+        </svg>
+        <div class="ns-logo-t">
+          <span class="ns-logo-n">NyayaSetu</span>
+          <span class="ns-logo-s">Immutable Evidence Locker</span>
+        </div>
+      </div>
+      <div class="ns-clock" style="font-family: 'Orbitron'; color: #22d3ee;">00:00:00</div>
+    </header>
 
     <section class="ns-cards">
       <div class="ns-cards-g">
@@ -62,8 +82,8 @@
 
       </div>
     </section>
-    </div>
-      <%- include('partials/footer') %>
+  </div>
+  
 </body>
 
 </html>
