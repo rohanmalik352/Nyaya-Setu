@@ -1,74 +1,67 @@
-<!DOCTYPE html>
-<html lang="en">
+<% layout('layouts/boilerplate') %>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nyaya-Setu | The Bridge of Justice</title>
-  <link rel="icon" type="image/png" href="/favicon.ico" />
-  <link rel="stylesheet" href="/css/style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-  <script src="/js/app.js" defer></script>
-   <script src="/js/wallet.js" defer></script>
-</head>
+<div id="landingPage" class="ns-page">
+    <section class="ns-cards">
+        <div class="ns-cards-g">
 
-<body>
-  <%- include('partials/navbar') %>
-  
-  <div class="ns-stars" id="starsContainer"></div>
-  <div class="ns-amb"></div>
+            <div class="ns-gc" style="cursor: pointer;" onclick="showSection('policeDashboard')">
+                <h2 class="ns-ct">Police Evidence Registration</h2>
+                <div class="ns-ri">
+                    <svg class="ns-ri-out" viewBox="0 0 200 200" fill="none">
+                        <circle cx="100" cy="100" r="92" stroke="rgba(0,210,230,0.12)" stroke-width="1" />
+                        <circle cx="100" cy="100" r="92" stroke="rgba(0,210,230,0.55)" stroke-width="2" stroke-dasharray="14 8 6 8" stroke-linecap="round" />
+                    </svg>
+                    <svg class="ns-ri-sym" width="60" height="68" viewBox="0 0 56 64" fill="none">
+                        <path d="M28 2 L50 14 L50 34 C50 48 38 58 28 62 C18 58 6 48 6 34 L6 14 Z" stroke="#22d3ee" stroke-width="2.5" fill="rgba(0,210,230,0.08)" />
+                        <text x="28" y="43" text-anchor="middle" fill="#22d3ee" font-size="28" font-weight="700" font-family="'Orbitron',sans-serif">P</text>
+                    </svg>
+                </div>
+                <button class="ns-clb">Register</button>
+            </div>
 
-  
-  <div id="landingPage" class="ns-page">
+            <a href="/verify" class="ns-gc ns-gc--gr" style="text-decoration: none;">
+                <h2 class="ns-ct">Judicial Verification</h2>
+                <div class="ns-ri">
+                    <svg class="ns-ri-out" viewBox="0 0 200 200" fill="none">
+                        <circle cx="100" cy="100" r="92" stroke="rgba(50,210,130,0.12)" stroke-width="1" />
+                        <circle cx="100" cy="100" r="92" stroke="rgba(50,210,130,0.55)" stroke-width="2" stroke-dasharray="14 8 6 8" stroke-linecap="round" />
+                    </svg>
+                    <svg class="ns-ri-sym" width="60" height="60" viewBox="0 0 64 64" fill="none">
+                        <rect x="20" y="18" width="40" height="18" rx="4" fill="#34d399" transform="rotate(-45 40 27)" />
+                        <rect x="38" y="32" width="6" height="32" rx="3" fill="#34d399" opacity="0.85" transform="rotate(-45 41 32)" />
+                        <rect x="8" y="54" width="48" height="6" rx="3" fill="#34d399" opacity="0.6" />
+                    </svg>
+                </div>
+                <button class="ns-clb ns-clb--gr">Verify</button>
+            </a>
+
+        </div>
+    </section>
+</div>
+
+<div id="policeDashboard" class="ns-page ns-hidden">
     <header class="ns-hdr">
+        <button class="ns-btn-sm" onclick="showSection('landingPage')">← BACK</button>
+        <div class="ns-logo-n">Police Dashboard</div>
+        <div style="width: 50px;"></div>
     </header>
 
-    <section class="ns-cards">
-      <div class="ns-cards-g">
-
-
-        <!-- POLICE CARD -->
-        <a href="/police" class="ns-gc">
-          <h2 class="ns-ct">Police Evidence Registration</h2>
-          <div class="ns-ri">
-            <svg class="ns-ri-out" viewBox="0 0 200 200" fill="none">
-              <circle cx="100" cy="100" r="92" stroke="rgba(0,210,230,0.12)" stroke-width="1" />
-              <circle cx="100" cy="100" r="92" stroke="rgba(0,210,230,0.55)" stroke-width="2"
-                stroke-dasharray="14 8 6 8" stroke-linecap="round" />
-            </svg>
-            <svg class="ns-ri-sym" width="60" height="68" viewBox="0 0 56 64" fill="none">
-              <path d="M28 2 L50 14 L50 34 C50 48 38 58 28 62 C18 58 6 48 6 34 L6 14 Z" stroke="#22d3ee"
-                stroke-width="2.5" fill="rgba(0,210,230,0.08)" />
-              <text x="28" y="43" text-anchor="middle" fill="#22d3ee" font-size="28" font-weight="700"
-                font-family="'Orbitron',sans-serif">P</text>
-            </svg>
-          </div>
-          <button class="ns-clb">Register</button>
-        </a>
-
-        <!-- JUDGE CARD -->
-        <a href="/verify" class="ns-gc ns-gc--gr">
-          <h2 class="ns-ct">Judicial Verification</h2>
-          <div class="ns-ri">
-            <svg class="ns-ri-out" viewBox="0 0 200 200" fill="none">
-              <circle cx="100" cy="100" r="92" stroke="rgba(50,210,130,0.12)" stroke-width="1" />
-              <circle cx="100" cy="100" r="92" stroke="rgba(50,210,130,0.55)" stroke-width="2"
-                stroke-dasharray="14 8 6 8" stroke-linecap="round" />
-            </svg>
-            <svg class="ns-ri-sym" width="60" height="60" viewBox="0 0 64 64" fill="none">
-              <rect x="20" y="18" width="40" height="18" rx="4" fill="#34d399" transform="rotate(-45 40 27)" />
-              <rect x="38" y="32" width="6" height="32" rx="3" fill="#34d399" opacity="0.85"
-                transform="rotate(-45 41 32)" />
-              <rect x="8" y="54" width="48" height="6" rx="3" fill="#34d399" opacity="0.6" />
-            </svg>
-          </div>
-          <button class="ns-clb ns-clb--gr">Verify</button>
-        </a>
-
-      </div>
-    </section>
-  </div>
-  <%- include('partials/footer') %>
-</body>
-
-</html>
+    <div class="ns-db-out">
+        <div class="ns-db-in">
+            <h2 class="ns-ct" style="margin-bottom: 2rem;">Upload Evidence</h2>
+            <button id="connectBtn" class="ns-sub" onclick="connectWallet()" style="background: #ea580c; margin-bottom: 2rem;">
+                🦊 Connect MetaMask
+            </button>
+            <form id="uploadForm">
+                <input type="text" class="ns-fi" name="caseId" placeholder="Case Reference Number" required>
+                <input type="text" class="ns-fi" name="officerId" placeholder="Badge ID" required>
+                <label class="ns-fw">
+                    <span class="ns-fw-lb">Choose Evidence File...</span>
+                    <input type="file" name="file" required onchange="this.previousElementSibling.innerText = this.files[0].name">
+                </label>
+                <button type="submit" id="submitBtn" class="ns-sub">Upload to IPFS & Blockchain</button>
+            </form>
+            <div id="statusBox" class="ns-stb"></div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,97 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="row mt-3">
+    <h1 class="col-6 offset-3 text-center">Signup on Nyaya-Setu</h1>
+
+    <div class="col-6 offset-3">
+        <form action="/signup" method="post" class="needs-validation" novalidate>
+            
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    id="username" 
+                    name="username" 
+                    placeholder="e.g. inspector_rahul"
+                    required>
+                <div class="invalid-feedback">Please choose a username.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input 
+                    type="email" 
+                    class="form-control" 
+                    id="email" 
+                    name="email" 
+                    placeholder="name@example.com"
+                    required>
+                <div class="invalid-feedback">Please enter a valid email.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input 
+                    type="password" 
+                    class="form-control" 
+                    id="password" 
+                    name="password" 
+                    required>
+                <div class="invalid-feedback">Password is required.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="role" class="form-label">Role</label>
+                <select class="form-control" id="role" name="role" required onchange="toggleIdField()">
+                    <option value="">Select Role</option>
+                    <option value="police">Police</option>
+                    <option value="judge">Judge</option>
+                </select>
+                <div class="invalid-feedback">Please select a role.</div>
+            </div>
+
+            <div class="mb-3" id="officerIdDiv" style="display:none;">
+                <label for="officerId" class="form-label">Officer ID</label>
+                <input type="text" class="form-control" id="officerId" name="officerId">
+            </div>
+
+            <div class="mb-3" id="judgeIdDiv" style="display:none;">
+                <label for="judgeId" class="form-label">Judge ID</label>
+                <input type="text" class="form-control" id="judgeId" name="judgeId">
+            </div>
+
+            <button type="submit" class="btn btn-success w-100">Signup</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleIdField() {
+        const role = document.getElementById('role').value;
+        const officerDiv = document.getElementById('officerIdDiv');
+        const judgeDiv = document.getElementById('judgeIdDiv');
+        
+        officerDiv.style.display = role === 'police' ? 'block' : 'none';
+        judgeDiv.style.display = role === 'judge' ? 'block' : 'none';
+        
+        // Optional: Make the dynamic fields 'required' when they are visible
+        document.getElementById('officerId').required = (role === 'police');
+        document.getElementById('judgeId').required = (role === 'judge');
+    }
+
+    // Bootstrap validation
+    (() => {
+      'use strict'
+      const forms = document.querySelectorAll('.needs-validation')
+      Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+          if (!form.checkValidity()) {
+            event.preventDefault()
+            event.stopPropagation()
+          }
+          form.classList.add('was-validated')
+        }, false)
+      })
+    })()
+</script>

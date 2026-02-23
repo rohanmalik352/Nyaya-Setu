@@ -1,9 +1,9 @@
 
-    // --- Blockchain Logic (Maintained from original) ---
+ 
     let signer;
     let contract;
     
-    // --- COPY PASTE YOUR CONTRACT DETAILS HERE ---
+
     const CONTRACT_ADDRESS = "0x7C9069A677807e4D168e3a7c40bFbe790288Ad18"; 
     const ABI = [
 		{

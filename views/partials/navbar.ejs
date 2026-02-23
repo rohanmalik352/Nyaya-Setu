@@ -20,6 +20,20 @@
     <a href="/verify" class="ns-nav-link ns-nav-link--gr">Verify</a>
     <a href="/evidence" class="ns-nav-link">Repository</a>
     <a href="/about" class="ns-nav-link">About</a>
+
+    <% if (!currentUser) { %>
+      <!-- Not Logged In -->
+      <a href="/login" class="ns-nav-link">Login</a>
+      <a href="/signup" class="ns-nav-link">Signup</a>
+    <% } else { %>
+      <!-- Logged In -->
+      <a href="/police-dashboard" class="ns-nav-link">Dashboard</a>
+      <a href="/verify" class="ns-nav-link">Judge Verify</a>
+
+      <form action="/logout" method="post" class="ns-logout-form">
+        <button type="submit" class="ns-logout-btn">Logout</button>
+      </form>
+    <% } %>
   </nav>
 
   <button class="ns-nav-toggle" id="navToggle" aria-label="Toggle menu">
@@ -27,11 +41,24 @@
   </button>
 </header>
 
+<!-- Mobile Menu -->
 <div class="ns-nav-mob ns-hidden" id="mobileMenu">
   <a href="/" class="ns-nav-mob-link">Home</a>
   <a href="/verify" class="ns-nav-mob-link ns-nav-mob-link--gr">Verify</a>
   <a href="/evidence" class="ns-nav-mob-link">Repository</a>
   <a href="/about" class="ns-nav-mob-link">About</a>
+
+  <% if (!currentUser) { %>
+    <a href="/login" class="ns-nav-mob-link">Login</a>
+    <a href="/signup" class="ns-nav-mob-link">Signup</a>
+  <% } else { %>
+    <a href="/police-dashboard" class="ns-nav-mob-link">Dashboard</a>
+    <a href="/verify" class="ns-nav-mob-link">Judge Verify</a>
+
+    <form action="/logout" method="post">
+      <button class="ns-nav-mob-link">Logout</button>
+    </form>
+  <% } %>
 </div>
 
 <script>
