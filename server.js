@@ -34,13 +34,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 const dbUrl = process.env.MONGO_URI;
 
 
+const secret = process.env.SECRET || "fallbacksecret";
+
 app.use(session({
     store: MongoStore.create({
         mongoUrl: dbUrl,
-        crypto: { secret: process.env.secret },
+        crypto: { secret: secret },
         touchAfter: 24 * 3600
     }),
-    secret: "mysupersecretcode",
+    secret: secret,
     resave: false,
     saveUninitialized: true,
     cookie: {
