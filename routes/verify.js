@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import mongoose from 'mongoose';
 import Evidence from '../models/evidence.js';
+import { isJudge, isloggedin } from "../../middleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -14,7 +15,7 @@ const __dirname = dirname(__filename);
 const router = express.Router();
 const upload = multer({ dest: path.join(__dirname, '../uploads') });
 
-router.get('/verify', async (req, res) => {
+router.get('/verify', isloggedin,isJudge, async (req, res) => {
   const { id } = req.query;
   let preFetchedData = null;
 
@@ -25,7 +26,7 @@ router.get('/verify', async (req, res) => {
   res.render('verify', { result: null, preFetched: preFetchedData });
 });
 
-router.post(['/verify', '/verify/:id'], upload.single('file'), async (req, res) => {
+router.post(['/verify', '/verify/:id'], isloggedin,isJudge, upload.single('file'), async (req, res) => {
   try {
     const { id } = req.params;
     const { caseId } = req.body;
@@ -51,6 +52,7 @@ router.post(['/verify', '/verify/:id'], upload.single('file'), async (req, res) 
     const isValid = (originalRecord && originalRecord.fileHash === currentHash);
 
     fs.unlinkSync(req.file.path);
+      
 
   
     res.render('verify', {
@@ -64,6 +66,7 @@ router.post(['/verify', '/verify/:id'], upload.single('file'), async (req, res) 
 
   } catch (error) {
     console.error("Verification Error:", error);
+ 
     res.status(500).send("Verification failed.");
   }
 });

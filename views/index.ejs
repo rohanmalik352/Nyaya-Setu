@@ -4,7 +4,7 @@
     <section class="ns-cards">
         <div class="ns-cards-g">
 
-            <div class="ns-gc" style="cursor: pointer;" onclick="showSection('policeDashboard')">
+            <a href="/police" class="ns-gc" style="text-decoration: none; cursor: pointer;">
                 <h2 class="ns-ct">Police Evidence Registration</h2>
                 <div class="ns-ri">
                     <svg class="ns-ri-out" viewBox="0 0 200 200" fill="none">
@@ -17,7 +17,7 @@
                     </svg>
                 </div>
                 <button class="ns-clb">Register</button>
-            </div>
+            </a>
 
             <a href="/verify" class="ns-gc ns-gc--gr" style="text-decoration: none;">
                 <h2 class="ns-ct">Judicial Verification</h2>
@@ -37,31 +37,4 @@
 
         </div>
     </section>
-</div>
-
-<div id="policeDashboard" class="ns-page ns-hidden">
-    <header class="ns-hdr">
-        <button class="ns-btn-sm" onclick="showSection('landingPage')">← BACK</button>
-        <div class="ns-logo-n">Police Dashboard</div>
-        <div style="width: 50px;"></div>
-    </header>
-
-    <div class="ns-db-out">
-        <div class="ns-db-in">
-            <h2 class="ns-ct" style="margin-bottom: 2rem;">Upload Evidence</h2>
-            <button id="connectBtn" class="ns-sub" onclick="connectWallet()" style="background: #ea580c; margin-bottom: 2rem;">
-                🦊 Connect MetaMask
-            </button>
-            <form id="uploadForm">
-                <input type="text" class="ns-fi" name="caseId" placeholder="Case Reference Number" required>
-                <input type="text" class="ns-fi" name="officerId" placeholder="Badge ID" required>
-                <label class="ns-fw">
-                    <span class="ns-fw-lb">Choose Evidence File...</span>
-                    <input type="file" name="file" required onchange="this.previousElementSibling.innerText = this.files[0].name">
-                </label>
-                <button type="submit" id="submitBtn" class="ns-sub">Upload to IPFS & Blockchain</button>
-            </form>
-            <div id="statusBox" class="ns-stb"></div>
-        </div>
-    </div>
 </div>

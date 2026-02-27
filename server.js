@@ -14,6 +14,7 @@ import homeRoutes from './routes/home.js';
 import evidenceRoutes from './routes/evidence.js';
 import verifyRoutes from './routes/verify.js';
 import user from './models/user.js';
+import flash from "connect-flash"
 
 
 import userrouter from './routes/user.js';
@@ -51,6 +52,7 @@ app.use(session({
         httpOnly: true
     }
 }));
+app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 passport.use(new LocalStrategy(user.authenticate()));
@@ -58,6 +60,8 @@ passport.serializeUser(user.serializeUser());
 passport.deserializeUser(user.deserializeUser());
 app.use((req, res, next) => {
   res.locals.currentUser = req.user; 
+  res.locals.error = req.flash("error");
+  res.locals.success = req.flash("success");
   next();
 });
 const connectDB = async () => {

@@ -7,9 +7,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import pinataSDK from '@pinata/sdk';
-import AWS from 'aws-sdk'; // NEW: AWS Tool
+import AWS from 'aws-sdk'; 
 import Evidence from '../models/evidence.js';
 import { Readable } from 'stream';
+import { isloggedin } from '../../middleware.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -54,7 +55,7 @@ function decryptBuffer(encryptedBuffer) {
 }
 
 // --- ROUTE: Show Evidence Page ---
-router.get('/evidence', async (req, res) => {
+router.get('/evidence', isloggedin, async (req, res) => {
   try {
     const allEvidence = await Evidence.find({});
     res.render('show', { evidences: allEvidence });
@@ -65,7 +66,7 @@ router.get('/evidence', async (req, res) => {
 });
 
 // --- ROUTE: The 3-Layer Upload ---
-router.post('/evidence/upload-api', upload.single('file'), async (req, res) => {
+router.post('/evidence/upload-api', isloggedin, upload.single('file'), async (req, res) => {
   try {
     const { caseId, officerId } = req.body;
 
@@ -159,7 +160,7 @@ router.post('/evidence/upload-api', upload.single('file'), async (req, res) => {
 });
 
 // --- ROUTE: Confirm Blockchain Transaction ---
-router.post('/evidence/confirm-tx', async (req, res) => {
+router.post('/evidence/confirm-tx',isloggedin, async (req, res) => {
   try {
     const { dbId, txHash } = req.body;
     await Evidence.findByIdAndUpdate(dbId, { blockchainTxHash: txHash });
@@ -170,7 +171,7 @@ router.post('/evidence/confirm-tx', async (req, res) => {
 });
 
 // --- ROUTE: Retrieve Evidence (The Safety Net) ---
-router.get('/evidence/retrieve/:id', async (req, res) => {
+router.get('/evidence/retrieve/:id', isloggedin,async (req, res) => {
   try {
     const evidence = await Evidence.findById(req.params.id);
     if (!evidence) return res.status(404).send("Not found.");

@@ -1164,3 +1164,66 @@ body {
   color: #03121a;
   box-shadow: 0 0 10px #22d3ee, 0 0 20px #22d3ee;
 }
+/* Container to handle positioning */
+.flash-container {
+    position: fixed;
+    top: 90px; /* Sits exactly below your ns-navbar */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Base Alert Styling */
+.flash-container .alert {
+    width: max-content !important; /* Shrinks to message length */
+    min-width: 250px;
+    max-width: 90vw;
+    padding: 10px 45px 10px 15px; /* Extra right padding for the X button */
+    font-family: var(--fd); /* Orbitron */
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+/* Success Theme (Using your --e4 emerald) */
+.flash-container .alert-success {
+    background: rgba(16, 185, 129, 0.1); 
+    color: var(--e4);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+}
+
+/* Error Theme (Using your --danger red) */
+.flash-container .alert-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.15);
+}
+
+/* Small indicator icon */
+.ns-flash-icon {
+    margin-right: 10px;
+    font-size: 1rem;
+}
+
+/* Sci-fi Close Button */
+.flash-container .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%); /* Makes it white */
+    transform: scale(0.7);
+    opacity: 0.8;
+}
+
+.flash-container .btn-close:hover {
+    opacity: 1;
+}

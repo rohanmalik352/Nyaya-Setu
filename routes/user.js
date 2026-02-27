@@ -1,15 +1,16 @@
 import express from "express";
 import User from "../models/user.js";
 import passport from "passport";
-import LocalStrategy from "passport-local";
-import session from "express-session";
-import MongoStore from "connect-mongo";
+import { saveRedirectUrl } from "../../middleware.js";
+
 const router = express.Router();
 
+// --- SIGNUP PAGE ---
 router.get("/signup", (req, res) => {
   res.render("users/signup");
 });
 
+// --- SIGNUP LOGIC ---
 router.post("/signup", async (req, res) => {
   try {
     const { username, password, email, role, officerId, judgeId } = req.body;
@@ -22,24 +23,53 @@ router.post("/signup", async (req, res) => {
       judgeId: role === "judge" ? judgeId : undefined
     });
 
-    await User.register(newUser, password); 
-    res.redirect("/verify");
+    await User.register(newUser, password);
+
+    // ✅ FLASH SUCCESS
+    req.flash("success", "Signup successful! Please log in.");
+    res.redirect("/login"); 
+
   } catch (err) {
     console.error(err);
-    res.status(500).send("Signup failed: " + err.message);
+
+    // ✅ FLASH ERROR
+    req.flash("error", err.message);
+    res.redirect("/signup");   
   }
 });
+
+// --- LOGIN PAGE ---
 router.get("/login", (req, res) => {
   res.render("users/login");
 });
-router.post("/login", passport.authenticate("local", {
-  failureRedirect: "/login",
-  failureFlash: true
-}), (req, res) => {
-  res.redirect("/");
-});
+
+// --- LOGIN LOGIC ---
+router.post(
+  "/login",
+  saveRedirectUrl,
+  passport.authenticate("local", {
+    failureRedirect: "/login",
+    failureFlash: true
+  }),
+  (req, res) => {
+    req.flash("success", "Welcome back, " + req.user.username + "!");
+
+    const redirectUrl = res.locals.redirectUrl || "/";
+    res.redirect(redirectUrl);
+  }
+);
+
+// --- LOGOUT ---
 router.post("/logout", (req, res) => {
-  req.logout(() => {
+  req.logout((err) => {
+    if (err) {
+      req.flash("error", "Logout failed.");
+      return res.redirect("/");
+    }
+
+    req.flash("success", "You have been logged out.");
     res.redirect("/login");
-  })}); 
+  });
+});
+
 export default router;
