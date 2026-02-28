@@ -705,12 +705,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem 2rem;
+  padding: 1rem;
 }
 
 @media(min-width: 768px) {
   .ns-hdr {
-    padding: 2rem 3rem;
+    padding: 1rem;
   }
 }
 
